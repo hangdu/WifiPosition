@@ -11,12 +11,15 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     final private int REQUEST_CODE_ASK_PERMISSIONS = 1234;
-
+    TextView textView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,8 +43,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
-
         WifiManager wifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 // Level of a Scan Result
         List<ScanResult> wifiList = wifiManager.getScanResults();
@@ -55,12 +56,28 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("ScanResult networkName is " + networkName);
         }
 
-// Level of current connection
-        int rssi = wifiManager.getConnectionInfo().getRssi();
-//        int level = WifiManager.calculateSignalLevel(rssi, 5);
-        String BSSID = wifiManager.getConnectionInfo().getBSSID();
-        System.out.println("My connection : rssi is " + rssi);
-        System.out.println("My connection : BSSID is " + BSSID);
+
+        textView = (TextView) findViewById(R.id.textview_result);
+        Button button1 = (Button) findViewById(R.id.button_learn1);
+        button1.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Do something in response to button click
+                textView.setText("Button1 is clicked");
+            }
+        });
+
+
+        Button button2 = (Button) findViewById(R.id.button_learn2);
+        button2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Do something in response to button click
+                textView.setText("Button2 is clicked");
+            }
+        });
+
+
+
+
 
     }
 }
