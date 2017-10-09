@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
     WifiManager wifiManager;
     int scanTimesForOnePoint = 5;
     Set<String> APs;
+
+    String sampleValue;
+
+    Handler handler = new Handler();
+    List<Integer> strengthList = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,62 +79,50 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Do something in response to button click
                 textView.setText("Button1 is clicked");
-                pos1Finger.clear();
 
-                List<ScanResult> wifiList = wifiManager.getScanResults();
-                System.out.println("Scanning result for the first position");
-                StringBuilder builder = new StringBuilder();
-                builder.append("In total AP number = " + wifiList.size() +  "\n");
-                builder.append("\n");
-                for (ScanResult scanResult : wifiList) {
-                    String bssid = scanResult.BSSID;
-                    String networkName = scanResult.SSID;
-                    int rssi = scanResult.level;
-                    System.out.println("NetworkName = " + networkName);
-                    System.out.println("Mac address = " + bssid);
-                    System.out.println("Rssi = " + rssi);
-
-                    if (APs.contains(bssid)) {
-                        builder.append("NetworkName = " + networkName + "\n");
-                        builder.append("Mac address = " + bssid+ "\n");
-                        builder.append("Rssi = " + rssi+ "\n");
-                        builder.append("\n");
-                        pos1Finger.put(bssid, rssi);
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        scanAP();
                     }
-                }
-                textView.setText(builder.toString());
+                };
+                new Thread(runnable).start();
             }
         });
 
         Button button2 = (Button) findViewById(R.id.button_learn2);
         button2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // Do something in response to button click
-                textView.setText("Button2 is clicked");
-
-                pos2Finger.clear();
-                List<ScanResult> wifiList = wifiManager.getScanResults();
-                System.out.println("Scanning result for the second position");
-                StringBuilder builder = new StringBuilder();
-                builder.append("In total AP number = " + wifiList.size() +  "\n");
-                builder.append("\n");
-                for (ScanResult scanResult : wifiList) {
-                    String bssid = scanResult.BSSID;
-                    String networkName = scanResult.SSID;
-                    int rssi = scanResult.level;
-                    System.out.println("NetworkName = " + networkName);
-                    System.out.println("Mac address = " + bssid);
-                    System.out.println("Rssi = " + rssi);
-
-                    if (APs.contains(bssid)) {
-                        builder.append("NetworkName = " + networkName + "\n");
-                        builder.append("Mac address = " + bssid+ "\n");
-                        builder.append("Rssi = " + rssi+ "\n");
-                        builder.append("\n");
-                        pos2Finger.put(bssid, rssi);
-                    }
+                StringBuilder build = new StringBuilder();
+                for (int i = 0; i < strengthList.size(); i++) {
+                    build.append(String.valueOf(strengthList.get(i)));
+                    build.append("\n");
                 }
-                textView.setText(builder.toString());
+                String s = new String(build);
+                textView.setText(s);
+                // Do something in response to button click
+//                textView.setText("Button2 is clicked");
+//
+//                pos2Finger.clear();
+//                List<ScanResult> wifiList = wifiManager.getScanResults();
+//                System.out.println("Scanning result for the second position");
+//
+//                builder.append("In total AP number = " + wifiList.size() +  "\n");
+//                builder.append("\n");
+//                for (ScanResult scanResult : wifiList) {
+//                    String bssid = scanResult.BSSID;
+//                    String networkName = scanResult.SSID;
+//                    int rssi = scanResult.level;
+//                    System.out.println("NetworkName = " + networkName);
+//                    System.out.println("Mac address = " + bssid);
+//                    System.out.println("Rssi = " + rssi);
+//
+//                    if (APs.contains(bssid)) {
+//
+//                        pos2Finger.put(bssid, rssi);
+//                    }
+//                }
+//                textView.setText(builder.toString());
             }
         });
 
@@ -173,7 +168,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    
+
+    private void scanAP() {
+        for (int i = 0; i < 60; i++) {
+            List<ScanResult> wifiList = wifiManager.getScanResults();
+            ScanResult oneAPScanResult = wifiList.get(0);
+            String bssid = oneAPScanResult.BSSID;
+            String networkName = oneAPScanResult.SSID;
+            int rssi = oneAPScanResult.level;
+            strengthList.add(rssi);
+
+            StringBuilder builder = new StringBuilder();
+            builder.append("Index = " + i + "\n");
+            builder.append("NetworkName = " + networkName + "\n");
+            builder.append("Mac address = " + bssid+ "\n");
+            builder.append("Rssi = " + rssi+ "\n");
+            builder.append("\n");
+            sampleValue = new String(builder);
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    textView.setText(sampleValue);
+                }
+            });
+        }
+    }
+
     double getDistance(Map<String, Integer> map1, Map<String, Integer> map2) {
         int sum = 0;
         for (String key : map1.keySet()) {
