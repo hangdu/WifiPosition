@@ -36,7 +36,8 @@ public class Client extends AsyncTask<Void, Void, String> {
             Gson gson = new Gson();
             String s = gson.toJson(fingerPrint);
             DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-            dataOutputStream.writeUTF(s);
+//            dataOutputStream.writeChars(s);
+            dataOutputStream.writeBytes(s);
             dataOutputStream.flush();
             dataOutputStream.close();
         } catch (UnknownHostException e) {

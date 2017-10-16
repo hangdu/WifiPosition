@@ -81,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
     private FingerPrint scanAP() {
         //3 AP
         Map<String, List<Integer>> map = new HashMap<>();
-        for (int i = 0; i < 60; i++) {
+//        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < 5; i++) {
             List<ScanResult> wifiList = wifiManager.getScanResults();
             StringBuilder builder = new StringBuilder();
             builder.append("Index = " + i + "\n");
