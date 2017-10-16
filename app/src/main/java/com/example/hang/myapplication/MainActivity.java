@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -26,34 +27,15 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
     final private int REQUEST_CODE_ASK_PERMISSIONS = 1234;
     TextView textView;
-    TextView position;
-    Map<String, Integer> pos1Finger;
-    Map<String, Integer> pos2Finger;
-
-    Map<String, Integer> unknownPointFinger;
+    EditText referencePosition, editTextAddress, editTextPort;
     WifiManager wifiManager;
-    int scanTimesForOnePoint = 5;
-    Set<String> APs;
-
     String sampleValue;
-
     Handler handler = new Handler();
-    List<Integer> strengthList = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("MyApp","I am here");
-        pos1Finger = new HashMap<>();
-        pos2Finger = new HashMap<>();
-        unknownPointFinger = new HashMap<>();
-        APs = new HashSet<>();
-//        b4:75:0e:82:f5:20
-//        a8:6b:ad:e1:38:c3
-//        c8:d3:ff:c5:07:aa
-        APs.add("b4:75:0e:82:f5:20");
-        APs.add("a8:6b:ad:e1:38:c3");
-        APs.add("c8:d3:ff:c5:07:aa");
         //Check for Android M runtime permissions
         if(Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(this,
@@ -72,126 +54,61 @@ public class MainActivity extends AppCompatActivity {
 
         wifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
+        referencePosition = (EditText) findViewById(R.id.referencePointName);
+        editTextAddress = (EditText) findViewById(R.id.addressEditText);
+        editTextPort = (EditText) findViewById(R.id.portEditText);
         textView = (TextView) findViewById(R.id.textview_status);
-        position = (TextView) findViewById(R.id.textview_result);
         Button button1 = (Button) findViewById(R.id.button_learn1);
         button1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Do something in response to button click
-                textView.setText("Button1 is clicked");
 
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        scanAP();
+                        FingerPrint fingerPrint = scanAP();
+                        //send this fingerPrint to server
+                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(),
+                                Integer.parseInt(editTextPort.getText().toString()), textView);
+                        myClient.execute();
                     }
                 };
                 new Thread(runnable).start();
             }
         });
-
-        Button button2 = (Button) findViewById(R.id.button_learn2);
-        button2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                StringBuilder build = new StringBuilder();
-                for (int i = 0; i < strengthList.size(); i++) {
-                    build.append(String.valueOf(strengthList.get(i)));
-                    build.append("\n");
-                }
-                String s = new String(build);
-                textView.setText(s);
-                // Do something in response to button click
-//                textView.setText("Button2 is clicked");
-//
-//                pos2Finger.clear();
-//                List<ScanResult> wifiList = wifiManager.getScanResults();
-//                System.out.println("Scanning result for the second position");
-//
-//                builder.append("In total AP number = " + wifiList.size() +  "\n");
-//                builder.append("\n");
-//                for (ScanResult scanResult : wifiList) {
-//                    String bssid = scanResult.BSSID;
-//                    String networkName = scanResult.SSID;
-//                    int rssi = scanResult.level;
-//                    System.out.println("NetworkName = " + networkName);
-//                    System.out.println("Mac address = " + bssid);
-//                    System.out.println("Rssi = " + rssi);
-//
-//                    if (APs.contains(bssid)) {
-//
-//                        pos2Finger.put(bssid, rssi);
-//                    }
-//                }
-//                textView.setText(builder.toString());
-            }
-        });
-
-
-        Button button3 = (Button) findViewById(R.id.track);
-        button3.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Do something in response to button click
-                textView.setText("Button3 is clicked");
-                unknownPointFinger.clear();
-
-                List<ScanResult> wifiList = wifiManager.getScanResults();
-                System.out.println("Scanning result for the target position");
-                StringBuilder builder = new StringBuilder();
-                builder.append("In total AP number = " + wifiList.size() +  "\n");
-                builder.append("\n");
-                for (ScanResult scanResult : wifiList) {
-                    String bssid = scanResult.BSSID;
-                    String networkName = scanResult.SSID;
-                    int rssi = scanResult.level;
-                    System.out.println("NetworkName = " + networkName);
-                    System.out.println("Mac address = " + bssid);
-                    System.out.println("Rssi = " + rssi);
-
-                    if (APs.contains(bssid)) {
-                        builder.append("NetworkName = " + networkName + "\n");
-                        builder.append("Mac address = " + bssid+ "\n");
-                        builder.append("Rssi = " + rssi+ "\n");
-                        builder.append("\n");
-                        unknownPointFinger.put(bssid, rssi);
-                    }
-                }
-                textView.setText(builder.toString());
-
-                double dis1 = getDistance(unknownPointFinger, pos1Finger);
-                double dis2 = getDistance(unknownPointFinger,pos2Finger);
-
-                if (dis1 < dis2) {
-                    position.setText("This is position1");
-                } else {
-                    position.setText("This is position2");
-                }
-            }
-        });
     }
 
-    private void scanAP() {
+    private FingerPrint scanAP() {
+        //3 AP
+        Map<String, List<Integer>> map = new HashMap<>();
         for (int i = 0; i < 60; i++) {
             List<ScanResult> wifiList = wifiManager.getScanResults();
-            ScanResult oneAPScanResult = wifiList.get(0);
-            String bssid = oneAPScanResult.BSSID;
-            String networkName = oneAPScanResult.SSID;
-            int rssi = oneAPScanResult.level;
-            strengthList.add(rssi);
-
             StringBuilder builder = new StringBuilder();
             builder.append("Index = " + i + "\n");
-            builder.append("NetworkName = " + networkName + "\n");
-            builder.append("Mac address = " + bssid+ "\n");
-            builder.append("Rssi = " + rssi+ "\n");
-            builder.append("\n");
-            sampleValue = new String(builder);
+            for (int k = 0; k < 3; k++) {
+                ScanResult oneAPScanResult = wifiList.get(k);
+                String bssid = oneAPScanResult.BSSID;
+                String networkName = oneAPScanResult.SSID;
+                int rssi = oneAPScanResult.level;
+                builder.append("NetworkName = " + networkName + "\n");
+                builder.append("Mac address = " + bssid+ "\n");
+                builder.append("Rssi = " + rssi+ "\n");
+                builder.append("\n");
 
+                if (map.containsKey(bssid)) {
+                    map.get(bssid).add(rssi);
+                } else {
+                    List<Integer> list = new ArrayList<>();
+                    list.add(rssi);
+                    map.put(bssid, list);
+                }
+            }
+            sampleValue = new String(builder);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
             handler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -199,16 +116,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        String referceName = referencePosition.getText().toString();
+        return new FingerPrint(referceName, map);
     }
 
-    double getDistance(Map<String, Integer> map1, Map<String, Integer> map2) {
-        int sum = 0;
-        for (String key : map1.keySet()) {
-            int strength1 = map1.get(key);
-            int strength2 = map2.get(key);
-            int diff = strength1-strength2;
-            sum += diff * diff;
-        }
-        return Math.sqrt(sum);
-    }
+    //After scanning APs, send to server
+
+//    double getDistance(Map<String, Integer> map1, Map<String, Integer> map2) {
+//        int sum = 0;
+//        for (String key : map1.keySet()) {
+//            int strength1 = map1.get(key);
+//            int strength2 = map2.get(key);
+//            int diff = strength1-strength2;
+//            sum += diff * diff;
+//        }
+//        return Math.sqrt(sum);
+//    }
 }

@@ -13,10 +13,28 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         tools:context="com.example.hang.myapplication.MainActivity">
+        <EditText
+            android:id="@+id/addressEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Server ip address" />
+
+        <EditText
+            android:id="@+id/portEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Server port number" />
+
+        <EditText
+            android:id="@+id/referencePointName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Reference Point Name" />
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="learn 1st place"
+            android:text="learn"
             android:id="@+id/button_learn1"/>
 
         <Button
