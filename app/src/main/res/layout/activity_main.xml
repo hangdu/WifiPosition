@@ -18,13 +18,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Server ip address" />
-
-        <EditText
-            android:id="@+id/portEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Server port number" />
-
         <EditText
             android:id="@+id/referencePointName"
             android:layout_width="match_parent"
@@ -40,12 +33,6 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="learn 2nd place"
-            android:id="@+id/button_learn2"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:text="Track"
             android:id="@+id/track"/>
 
@@ -54,16 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Hello World!" />
-
-
-        <TextView
-            android:id="@+id/textview_result"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Hello World!" />
-
     </LinearLayout>
-
 </ScrollView>
 
 

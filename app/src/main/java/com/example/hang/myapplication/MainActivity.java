@@ -18,16 +18,16 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     final private int REQUEST_CODE_ASK_PERMISSIONS = 1234;
     TextView textView;
-    EditText referencePosition, editTextAddress, editTextPort;
+    EditText referencePosition, editTextAddress;
     WifiManager wifiManager;
     String sampleValue;
     Handler handler = new Handler();
@@ -56,20 +56,17 @@ public class MainActivity extends AppCompatActivity {
 
         referencePosition = (EditText) findViewById(R.id.referencePointName);
         editTextAddress = (EditText) findViewById(R.id.addressEditText);
-        editTextPort = (EditText) findViewById(R.id.portEditText);
         textView = (TextView) findViewById(R.id.textview_status);
         Button button1 = (Button) findViewById(R.id.button_learn1);
         button1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Do something in response to button click
-
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
                         FingerPrint fingerPrint = scanAP();
                         //send this fingerPrint to server
-                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(),
-                                Integer.parseInt(editTextPort.getText().toString()), textView);
+                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
                         myClient.execute();
                     }
                 };
@@ -81,9 +78,18 @@ public class MainActivity extends AppCompatActivity {
     private FingerPrint scanAP() {
         //3 AP
         Map<String, List<Integer>> map = new HashMap<>();
+
+        //desending sort
+        Comparator<ScanResult> comp = new Comparator<ScanResult>() {
+            @Override
+            public int compare(ScanResult scanResult, ScanResult t1) {
+                return t1.level - scanResult.level;
+            }
+        };
 //        for (int i = 0; i < 60; i++) {
         for (int i = 0; i < 5; i++) {
             List<ScanResult> wifiList = wifiManager.getScanResults();
+            Collections.sort(wifiList, comp);
             StringBuilder builder = new StringBuilder();
             builder.append("Index = " + i + "\n");
             for (int k = 0; k < 3; k++) {
@@ -121,17 +127,4 @@ public class MainActivity extends AppCompatActivity {
         String referceName = referencePosition.getText().toString();
         return new FingerPrint(referceName, map);
     }
-
-    //After scanning APs, send to server
-
-//    double getDistance(Map<String, Integer> map1, Map<String, Integer> map2) {
-//        int sum = 0;
-//        for (String key : map1.keySet()) {
-//            int strength1 = map1.get(key);
-//            int strength2 = map2.get(key);
-//            int diff = strength1-strength2;
-//            sum += diff * diff;
-//        }
-//        return Math.sqrt(sum);
-//    }
 }
