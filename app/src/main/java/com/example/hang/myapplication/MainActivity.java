@@ -31,6 +31,11 @@ public class MainActivity extends AppCompatActivity {
     WifiManager wifiManager;
     String sampleValue;
     Handler handler = new Handler();
+
+
+    String learning = "LEARNING";
+    String tracking = "TRACKING";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +69,25 @@ public class MainActivity extends AppCompatActivity {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        FingerPrint fingerPrint = scanAP();
+                        String referceName = referencePosition.getText().toString();
+                        FingerPrint fingerPrint = scanAP(learning, referceName);
+                        //send this fingerPrint to server
+                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
+                        myClient.execute();
+                    }
+                };
+                new Thread(runnable).start();
+            }
+        });
+
+        Button trackButton = (Button) findViewById(R.id.track);
+        trackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        FingerPrint fingerPrint = scanAP(tracking, null);
                         //send this fingerPrint to server
                         Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
                         myClient.execute();
@@ -75,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private FingerPrint scanAP() {
+    private FingerPrint scanAP(String goal, String referceName) {
         //3 AP
         Map<String, List<Integer>> map = new HashMap<>();
 
@@ -123,8 +146,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-        String referceName = referencePosition.getText().toString();
-        return new FingerPrint(referceName, map);
+        return new FingerPrint(goal, referceName, map);
     }
 }

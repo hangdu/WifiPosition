@@ -25,7 +25,6 @@ public class Client extends AsyncTask<Void, Void, String> {
     String response = "";
     TextView textResponse;
     FingerPrint fingerPrint;
-
     Client(FingerPrint fingerPrint, String addr, int port, TextView textResponse) {
         dstAddress = addr;
         dstPort = port;

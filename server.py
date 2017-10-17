@@ -33,22 +33,28 @@ while True:
 
    c.send(text.encode())
    dict = json.loads(content)
-   referencePoint = dict['position']
-   print('referencePoint is ' + referencePoint)
-   #You can insert 3 records (3 rows)
+   goal = dict['goal']
+
+   if goal == "LEARNING":
+      referencePoint = dict['position']
+      print('referencePoint is ' + referencePoint)
+      #You can insert 3 records (3 rows)
    
-   map1 = dict['map']
-   conn.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint) \
+      map1 = dict['map']
+      conn.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint) \
       VALUES (?)", (referencePoint,));
 
-   for macAddress in map1:
-      intensityList = map1[macAddress]
-      m = statistics.mean(intensityList)
-      std = statistics.stdev(intensityList)
-      conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5) \
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4]));
-      conn.commit()
+      for macAddress in map1:
+         intensityList = map1[macAddress]
+         m = statistics.mean(intensityList)
+         std = statistics.stdev(intensityList)
+         conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5) \
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4]));
+         conn.commit()
    
+   if goal == "TRACKING":
+      text = 'Track Function is not ready yet'
+      c.send(text.encode())
    c.close()                # Close the connection
 
 conn.close()
