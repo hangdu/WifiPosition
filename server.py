@@ -17,7 +17,10 @@ conn.execute('''CREATE TABLE IF NOT EXISTS FINGER
          Intensity4            INT     NOT NULL,
          Intensity5            INT     NOT NULL);''')
 conn.execute('''CREATE TABLE IF NOT EXISTS REFERENCEPOSITIONS
-         (ReferencePoint CHAR(50)  NOT NULL);''')
+         (ReferencePoint CHAR(50)  NOT NULL,
+         MacAddress1     TEXT      NOT NULL,
+         MacAddress2     TEXT      NOT NULL,
+         MacAddress3     TEXT      NOT NULL);''')
 s = socket.socket()         # Create a socket object
 ips = check_output(['hostname', '--all-ip-addresses']).decode("utf-8")
 host = ips.split(' ')[0]
@@ -33,26 +36,33 @@ while True:
    content = c.recv(1024).decode()
    print('Received:   ' + content)
 
-   c.send(text.encode())
+   #c.send(text.encode())
    dict = json.loads(content)
    goal = dict['goal']
 
    if goal == "LEARNING":
+      c.send(text.encode())
       referencePoint = dict['position']
       print('referencePoint is ' + referencePoint)
       #You can insert 3 records (3 rows)
    
       map1 = dict['map']
-      conn.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint) \
-      VALUES (?)", (referencePoint,));
+      
 
+      macList = []
       for macAddress in map1:
+         macList.append(macAddress)
          intensityList = map1[macAddress]
          m = statistics.mean(intensityList)
          std = statistics.stdev(intensityList)
          conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5) \
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4]));
          conn.commit()
+
+      print(macList)
+      conn.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint,MacAddress1,MacAddress2,MacAddress3) \
+      VALUES (?,?,?,?)", (referencePoint,macList[0],macList[1],macList[2]));
+      conn.commit()
    
    if goal == "TRACKING":
       #text = 'Track Function is not ready yet'
