@@ -2,6 +2,7 @@ import socket               # Import socket module
 import json
 import sqlite3
 import statistics
+from subprocess import check_output
 
 
 conn = sqlite3.connect('test.db')
@@ -18,8 +19,9 @@ conn.execute('''CREATE TABLE IF NOT EXISTS FINGER
 conn.execute('''CREATE TABLE IF NOT EXISTS REFERENCEPOSITIONS
          (ReferencePoint CHAR(50)  NOT NULL);''')
 s = socket.socket()         # Create a socket object
-#host = socket.gethostname() # Get local machine name
-host = "192.168.1.109"
+ips = check_output(['hostname', '--all-ip-addresses']).decode("utf-8")
+host = ips.split(' ')[0]
+print('host = ' + host)
 port = 12345                # Reserve a port for your service.
 s.bind((host, port))        # Bind to the port
 
@@ -53,8 +55,17 @@ while True:
          conn.commit()
    
    if goal == "TRACKING":
-      text = 'Track Function is not ready yet'
-      c.send(text.encode())
+      #text = 'Track Function is not ready yet'
+      #c.send(text.encode())
+      map1 = dict['map']
+      #get 3 AP mac address from map1
+      l = []
+      for macAddress in map1:
+         l.append(macAddress)
+
+      myString = ",".join(l)
+      c.send(myString.encode())
+
    c.close()                # Close the connection
 
 conn.close()
