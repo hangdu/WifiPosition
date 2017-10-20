@@ -5,6 +5,20 @@ import statistics
 from scipy.stats import norm
 from subprocess import check_output
 
+def maxInList(l):
+   maxVal = -1
+   maxIndex = -1
+   index = 0
+   for val in l:
+      if val > maxVal:
+         maxVal = val
+         maxIndex = index
+      index = index + 1
+   res = []
+   res.append(maxIndex)
+   res.append(maxVal)
+   return res
+
 
 conn = sqlite3.connect('test.db')
 cursor = conn.cursor()
@@ -85,12 +99,15 @@ while True:
       conn.commit()
       rows = cursor.fetchall()
       print(rows)
+      prob = []
       for row in rows:
          print(row)
          #row is a tuple
          referP = row[0]
          #referP  AP1
-         cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, l[0]))
+         mac = l[0]
+         print("Mac address=" + mac)
+         cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, mac))
          conn.commit()
          tmp = cursor.fetchall()[0]
          mean = tmp[0]
@@ -100,11 +117,55 @@ while True:
          print('std='+str(std))
          if std == 0:
             std = 0.5
-         intensityList = map1[l[0]]
+         intensityList = map1[mac]
+         p0 = norm.pdf(statistics.mean(intensityList), mean, std)
+         print('probalilaty for the first AP is' + str(p0))
+
+         #referP  AP2
+         mac = l[1]
+         print("Mac address=" + mac)
+         cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, mac))
+         conn.commit()
+         tmp = cursor.fetchall()[0]
+         mean = tmp[0]
+         std = tmp[1]
+         
+         print('mean='+str(mean))
+         print('std='+str(std))
+         if std == 0:
+            std = 0.5
+         intensityList = map1[mac]
          p1 = norm.pdf(statistics.mean(intensityList), mean, std)
-         print('probalilaty for the first AP is' + str(p1))
+         print('probalilaty for the second AP is' + str(p1))
+
+
+         #referP  AP3
+         mac = l[2]
+         print("Mac address=" + mac)
+         cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, mac))
+         conn.commit()
+         tmp = cursor.fetchall()[0]
+         mean = tmp[0]
+         std = tmp[1]
+         
+         print('mean='+str(mean))
+         print('std='+str(std))
+         if std == 0:
+            std = 0.5
+         intensityList = map1[mac]
+         p2 = norm.pdf(statistics.mean(intensityList), mean, std)
+         print('probalilaty for the third AP is' + str(p2))
+         p_total = p0*p1*p2
+         prob.append(p_total)
       #go through table referencePositions to get all the reference points which have the same 3 AP information
       #Sort
+      sum_total = sum(prob)
+      res = maxInList(prob)
+      finalProb = res[1]/sum_total
+      targetPosition = rows[res[0]][0]
+      print('targetPosition is ' + targetPosition)
+      print("prob is " + str(finalProb))
+
 
    c.close()                # Close the connection
 
