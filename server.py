@@ -54,7 +54,6 @@ while True:
    content = c.recv(1024).decode()
    print('Received:   ' + content)
 
-   #c.send(text.encode())
    dict = json.loads(content)
    goal = dict['goal']
 
@@ -84,8 +83,6 @@ while True:
       conn.commit()
    
    if goal == "TRACKING":
-      #text = 'Track Function is not ready yet'
-      #c.send(text.encode())
       map1 = dict['map']
       #get 3 AP mac address from map1
       l = []
@@ -93,12 +90,16 @@ while True:
          l.append(macAddress)
 
       l.sort()
-      myString = ",".join(l)
-      c.send(myString.encode())
+      print('length for l is ' + str(len(l)))
+      myString = ",".join(l) + '\n'
+      #c.send(myString.encode())
       cursor.execute("select ReferencePoint from REFERENCEPOSITIONS where MacAddress1 = ? and MacAddress2 = ? and MacAddress3 = ?", (l[0], l[1], l[2]))
       conn.commit()
       rows = cursor.fetchall()
-      print(rows)
+      length = len(rows)
+      myString = myString + 'There are ' + str(length) + ' positions to be considered' + '\n'
+      #c.send(text.encode())
+      
       prob = []
       for row in rows:
          print(row)
@@ -165,7 +166,10 @@ while True:
       targetPosition = rows[res[0]][0]
       print('targetPosition is ' + targetPosition)
       print("prob is " + str(finalProb))
-
+      text1 = 'targetPosition is ' + targetPosition + '\n'
+      text2 = "prob is " + str(finalProb)
+      myString = myString + text1 + text2
+      c.send(myString.encode())
 
    c.close()                # Close the connection
 
