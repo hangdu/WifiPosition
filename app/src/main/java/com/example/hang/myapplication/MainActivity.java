@@ -109,13 +109,23 @@ public class MainActivity extends AppCompatActivity {
                 return t1.level - scanResult.level;
             }
         };
-//        for (int i = 0; i < 60; i++) {
-        for (int i = 0; i < 5; i++) {
+
+        List<ScanResult> wifiList1 = wifiManager.getScanResults();
+        Collections.sort(wifiList1, comp);
+        for (int k = 0; k < 3; k++) {
+            ScanResult oneAPScanResult = wifiList1.get(k);
+            String bssid = oneAPScanResult.BSSID;
+            List<Integer> list = new ArrayList<>();
+            map.put(bssid, list);
+        }
+        for (int i = 0; i < 30; i++) {
             List<ScanResult> wifiList = wifiManager.getScanResults();
             Collections.sort(wifiList, comp);
             StringBuilder builder = new StringBuilder();
             builder.append("Index = " + i + "\n");
-            for (int k = 0; k < 3; k++) {
+
+            int count = 0;
+            for (int k = 0; k < wifiList.size(); k++) {
                 ScanResult oneAPScanResult = wifiList.get(k);
                 String bssid = oneAPScanResult.BSSID;
                 String networkName = oneAPScanResult.SSID;
@@ -127,10 +137,10 @@ public class MainActivity extends AppCompatActivity {
 
                 if (map.containsKey(bssid)) {
                     map.get(bssid).add(rssi);
-                } else {
-                    List<Integer> list = new ArrayList<>();
-                    list.add(rssi);
-                    map.put(bssid, list);
+                    count++;
+                    if (count == 3) {
+                        break;
+                    }
                 }
             }
             sampleValue = new String(builder);

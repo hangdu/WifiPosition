@@ -31,7 +31,32 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS FINGER
          Intensity2            INT     NOT NULL,
          Intensity3            INT     NOT NULL,
          Intensity4            INT     NOT NULL,
-         Intensity5            INT     NOT NULL);''')
+         Intensity5            INT     NOT NULL,
+         Intensity6            INT     NOT NULL,
+         Intensity7            INT     NOT NULL,
+         Intensity8            INT     NOT NULL,
+         Intensity9            INT     NOT NULL,
+         Intensity10            INT     NOT NULL,
+         Intensity11            INT     NOT NULL,
+         Intensity12            INT     NOT NULL,
+         Intensity13            INT     NOT NULL,
+         Intensity14            INT     NOT NULL,
+         Intensity15            INT     NOT NULL,
+         Intensity16            INT     NOT NULL,
+         Intensity17            INT     NOT NULL,
+         Intensity18            INT     NOT NULL,
+         Intensity19            INT     NOT NULL,
+         Intensity20            INT     NOT NULL,
+         Intensity21            INT     NOT NULL,
+         Intensity22            INT     NOT NULL,
+         Intensity23            INT     NOT NULL,
+         Intensity24            INT     NOT NULL,
+         Intensity25            INT     NOT NULL,
+         Intensity26            INT     NOT NULL,
+         Intensity27            INT     NOT NULL,
+         Intensity28            INT     NOT NULL,
+         Intensity29            INT     NOT NULL,
+         Intensity30            INT     NOT NULL);''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS REFERENCEPOSITIONS
          (ReferencePoint CHAR(50)  NOT NULL,
          MacAddress1     TEXT      NOT NULL,
@@ -72,8 +97,8 @@ while True:
          intensityList = map1[macAddress]
          m = statistics.mean(intensityList)
          std = statistics.stdev(intensityList)
-         conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4]));
+         conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5,Intensity6,Intensity7,Intensity8,Intensity9,Intensity10,Intensity11,Intensity12,Intensity13,Intensity14,Intensity15,Intensity16,Intensity17,Intensity18,Intensity19,Intensity20,Intensity21,Intensity22,Intensity23,Intensity24,Intensity25,Intensity26,Intensity27,Intensity28,Intensity29,Intensity30) \
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4], intensityList[5], intensityList[6], intensityList[7], intensityList[8], intensityList[9], intensityList[10], intensityList[11], intensityList[12], intensityList[13], intensityList[14], intensityList[15], intensityList[16], intensityList[17], intensityList[18], intensityList[19], intensityList[20], intensityList[21], intensityList[22], intensityList[23], intensityList[24], intensityList[25], intensityList[26], intensityList[27], intensityList[28], intensityList[29]));
          conn.commit()
 
       macList.sort()
@@ -160,8 +185,11 @@ while True:
          prob.append(p_total)
       #go through table referencePositions to get all the reference points which have the same 3 AP information
       #Sort
+      
       sum_total = sum(prob)
+      print('sum_total is '+str(sum_total))
       res = maxInList(prob)
+
       finalProb = res[1]/sum_total
       targetPosition = rows[res[0]][0]
       print('targetPosition is ' + targetPosition)
