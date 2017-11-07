@@ -35,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
     String learning = "LEARNING";
     String tracking = "TRACKING";
+    int numofAPsForLearning = 5;
+    int numofAPsForTracking = 3;
+    int numofSamples = 30;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private FingerPrint scanAPForTracking(String goal) {
-        //3 AP
         Map<String, List<Integer>> map = new HashMap<>();
 
         //desending sort
@@ -118,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         Collections.sort(wifiList, comp);
         StringBuilder builder = new StringBuilder();
 
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < numofAPsForTracking; k++) {
             ScanResult oneAPScanResult = wifiList.get(k);
             String bssid = oneAPScanResult.BSSID;
             String networkName = oneAPScanResult.SSID;
@@ -163,13 +165,13 @@ public class MainActivity extends AppCompatActivity {
 
         List<ScanResult> wifiList1 = wifiManager.getScanResults();
         Collections.sort(wifiList1, comp);
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < numofAPsForLearning; k++) {
             ScanResult oneAPScanResult = wifiList1.get(k);
             String bssid = oneAPScanResult.BSSID;
             List<Integer> list = new ArrayList<>();
             map.put(bssid, list);
         }
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < numofSamples; i++) {
             List<ScanResult> wifiList = wifiManager.getScanResults();
             Collections.sort(wifiList, comp);
             StringBuilder builder = new StringBuilder();
@@ -186,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 builder.append("Rssi = " + rssi+ "\n");
                 builder.append("\n");
 
-                if (count < 3) {
+                if (count < numofAPsForLearning) {
                     if (map.containsKey(bssid)) {
                         map.get(bssid).add(rssi);
                         count++;

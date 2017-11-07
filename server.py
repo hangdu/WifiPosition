@@ -5,6 +5,7 @@ import statistics
 from scipy.stats import norm
 from subprocess import check_output
 
+#return index
 def maxInList(l):
    maxVal = -1
    maxIndex = -1
@@ -14,10 +15,7 @@ def maxInList(l):
          maxVal = val
          maxIndex = index
       index = index + 1
-   res = []
-   res.append(maxIndex)
-   res.append(maxVal)
-   return res
+   return maxIndex
 
 
 conn = sqlite3.connect('test.db')
@@ -61,7 +59,9 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS REFERENCEPOSITIONS
          (ReferencePoint CHAR(50)  NOT NULL,
          MacAddress1     TEXT      NOT NULL,
          MacAddress2     TEXT      NOT NULL,
-         MacAddress3     TEXT      NOT NULL);''')
+         MacAddress3     TEXT      NOT NULL,
+         MacAddress4     TEXT      NOT NULL,
+         MacAddress5     TEXT      NOT NULL);''')
 
 
 s = socket.socket()         # Create a socket object
@@ -103,13 +103,13 @@ while True:
 
       macList.sort()
       print(macList)
-      cursor.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint,MacAddress1,MacAddress2,MacAddress3) \
-      VALUES (?,?,?,?)", (referencePoint,macList[0],macList[1],macList[2]));
+      cursor.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint,MacAddress1,MacAddress2,MacAddress3,MacAddress4,MacAddress5) \
+      VALUES (?,?,?,?,?,?)", (referencePoint,macList[0],macList[1],macList[2],macList[3],macList[4]));
       conn.commit()
    
    if goal == "TRACKING":
       map1 = dict['map']
-      #get 3 AP mac address from map1
+      # When it is tracking, you only need 3 APs for the algorithm 
       l = []
       for macAddress in map1:
          l.append(macAddress)
@@ -117,25 +117,31 @@ while True:
       l.sort()
       print('length for l is ' + str(len(l)))
       myString = ",".join(l) + '\n'
-      #c.send(myString.encode())
-      cursor.execute("select ReferencePoint from REFERENCEPOSITIONS where MacAddress1 = ? and MacAddress2 = ? and MacAddress3 = ?", (l[0], l[1], l[2]))
+      cursor.execute("select ReferencePoint from REFERENCEPOSITIONS")
       conn.commit()
+
+      #rows contains all the positions in the database
       rows = cursor.fetchall()
       length = len(rows)
-      myString = myString + 'There are ' + str(length) + ' positions to be considered' + '\n'
-      #c.send(text.encode())
       
+     
       prob = []
+      choosableReferP = []
       for row in rows:
          print(row)
          #row is a tuple
          referP = row[0]
+         #print("ReferencePosition = " + referP)
          #referP  AP1
          mac = l[0]
-         print("Mac address=" + mac)
+         #print("Mac address = " + mac)
          cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, mac))
          conn.commit()
-         tmp = cursor.fetchall()[0]
+         res = cursor.fetchall()
+         if len(res) == 0:
+         	continue
+
+         tmp = res[0]
          mean = tmp[0]
          std = tmp[1]
          
@@ -149,10 +155,14 @@ while True:
 
          #referP  AP2
          mac = l[1]
-         print("Mac address=" + mac)
+         #print("Mac address=" + mac)
          cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, mac))
          conn.commit()
-         tmp = cursor.fetchall()[0]
+         res = cursor.fetchall()
+         if len(res) == 0:
+         	continue
+
+         tmp = res[0]
          mean = tmp[0]
          std = tmp[1]
          
@@ -167,10 +177,14 @@ while True:
 
          #referP  AP3
          mac = l[2]
-         print("Mac address=" + mac)
+         #print("Mac address=" + mac)
          cursor.execute("select mean, std from FINGER where ReferencePoint = ? and MacAddress = ?", (referP, mac))
          conn.commit()
-         tmp = cursor.fetchall()[0]
+         res = cursor.fetchall()
+         if len(res) == 0:
+         	continue
+
+         tmp = res[0]
          mean = tmp[0]
          std = tmp[1]
          
@@ -183,29 +197,32 @@ while True:
          print('probalilaty for the third AP is' + str(p2))
          p_total = p0*p1*p2
          prob.append(p_total)
-
+         choosableReferP.append(referP)
          print('referP is ' + referP + '\n')
    
 
       #go through table referencePositions to get all the reference points which have the same 3 AP information
       #Sort
-      
-      sum_total = sum(prob)
-      print('sum_total is '+str(sum_total))
-      res = maxInList(prob)
+      myString = myString + 'There are ' + str(len(prob)) + ' positions to be considered' + '\n'
+      if len(prob) == 0:
+         c.send(myString.encode())
+      else:
+         sum_total = sum(prob)
+         print('sum_total is '+str(sum_total))
+         index = maxInList(prob)
 
-      try:
-         finalProb = res[1]/sum_total
-         targetPosition = rows[res[0]][0]
-         print('targetPosition is ' + targetPosition)
-         print("prob is " + str(finalProb))
-         text1 = 'targetPosition is ' + targetPosition + '\n'
-         text2 = "prob is " + str(finalProb)
-         myString = myString + text1 + text2
-         c.send(myString.encode())
-      except ZeroDivisionError:
-         myString = myString + 'Oops! ZeroDivisionError happened.'
-         c.send(myString.encode())
+         try:
+            finalProb = prob[index]/sum_total
+            targetPosition = choosableReferP[index]
+            print('targetPosition is ' + targetPosition)
+            print("prob is " + str(finalProb))
+            text1 = 'targetPosition is ' + targetPosition + '\n'
+            text2 = "prob is " + str(finalProb)
+            myString = myString + text1 + text2
+            c.send(myString.encode())
+         except ZeroDivisionError:
+            myString = myString + 'Oops! ZeroDivisionError happened.'
+            c.send(myString.encode())
 
    c.close()                # Close the connection
 
