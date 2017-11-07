@@ -183,6 +183,10 @@ while True:
          print('probalilaty for the third AP is' + str(p2))
          p_total = p0*p1*p2
          prob.append(p_total)
+
+         print('referP is ' + referP + '\n')
+   
+
       #go through table referencePositions to get all the reference points which have the same 3 AP information
       #Sort
       
@@ -190,14 +194,18 @@ while True:
       print('sum_total is '+str(sum_total))
       res = maxInList(prob)
 
-      finalProb = res[1]/sum_total
-      targetPosition = rows[res[0]][0]
-      print('targetPosition is ' + targetPosition)
-      print("prob is " + str(finalProb))
-      text1 = 'targetPosition is ' + targetPosition + '\n'
-      text2 = "prob is " + str(finalProb)
-      myString = myString + text1 + text2
-      c.send(myString.encode())
+      try:
+         finalProb = res[1]/sum_total
+         targetPosition = rows[res[0]][0]
+         print('targetPosition is ' + targetPosition)
+         print("prob is " + str(finalProb))
+         text1 = 'targetPosition is ' + targetPosition + '\n'
+         text2 = "prob is " + str(finalProb)
+         myString = myString + text1 + text2
+         c.send(myString.encode())
+      except ZeroDivisionError:
+         myString = myString + 'Oops! ZeroDivisionError happened.'
+         c.send(myString.encode())
 
    c.close()                # Close the connection
 

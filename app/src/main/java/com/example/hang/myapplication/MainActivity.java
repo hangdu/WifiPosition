@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         String referceName = referencePosition.getText().toString();
-                        FingerPrint fingerPrint = scanAP(learning, referceName);
+                        FingerPrint fingerPrint = scanAPForLearning(learning, referceName);
                         //send this fingerPrint to server
                         Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
                         myClient.execute();
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        FingerPrint fingerPrint = scanAP(tracking, null);
+                        FingerPrint fingerPrint = scanAPForTracking(tracking);
                         //send this fingerPrint to server
                         Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
                         myClient.execute();
@@ -98,7 +98,58 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private FingerPrint scanAP(String goal, String referceName) {
+    private FingerPrint scanAPForTracking(String goal) {
+        //3 AP
+        Map<String, List<Integer>> map = new HashMap<>();
+
+        //desending sort
+        Comparator<ScanResult> comp = new Comparator<ScanResult>() {
+            @Override
+            public int compare(ScanResult scanResult, ScanResult t1) {
+                return t1.level - scanResult.level;
+            }
+        };
+
+        List<ScanResult> wifiList1 = wifiManager.getScanResults();
+        Collections.sort(wifiList1, comp);
+
+
+        List<ScanResult> wifiList = wifiManager.getScanResults();
+        Collections.sort(wifiList, comp);
+        StringBuilder builder = new StringBuilder();
+
+        for (int k = 0; k < 3; k++) {
+            ScanResult oneAPScanResult = wifiList.get(k);
+            String bssid = oneAPScanResult.BSSID;
+            String networkName = oneAPScanResult.SSID;
+            int rssi = oneAPScanResult.level;
+            builder.append("NetworkName = " + networkName + "\n");
+            builder.append("Mac address = " + bssid+ "\n");
+            builder.append("Rssi = " + rssi+ "\n");
+            builder.append("\n");
+
+            if (!map.containsKey(bssid)) {
+                List<Integer> list = new ArrayList<>();
+                map.put(bssid, list);
+            }
+            map.get(bssid).add(rssi);
+        }
+        sampleValue = new String(builder);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(sampleValue);
+            }
+        });
+        return new FingerPrint(goal, null, map);
+    }
+
+    private FingerPrint scanAPForLearning(String goal, String referceName) {
         //3 AP
         Map<String, List<Integer>> map = new HashMap<>();
 
@@ -135,11 +186,10 @@ public class MainActivity extends AppCompatActivity {
                 builder.append("Rssi = " + rssi+ "\n");
                 builder.append("\n");
 
-                if (map.containsKey(bssid)) {
-                    map.get(bssid).add(rssi);
-                    count++;
-                    if (count == 3) {
-                        break;
+                if (count < 3) {
+                    if (map.containsKey(bssid)) {
+                        map.get(bssid).add(rssi);
+                        count++;
                     }
                 }
             }
