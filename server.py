@@ -75,7 +75,6 @@ s.listen(5)                 # Now wait for client connection.
 while True:
    c, addr = s.accept()     # Establish connection with client.
    print('Got connection from', addr)
-   text = 'Thanks for your data'
    content = c.recv(1024).decode()
    print('Received:   ' + content)
 
@@ -83,30 +82,44 @@ while True:
    goal = dict['goal']
 
    if goal == "LEARNING":
-      c.send(text.encode())
+      myString = 'Thanks for your data' + '\n'
       referencePoint = dict['position']
       print('referencePoint is ' + referencePoint)
       #You can insert 3 records (3 rows)
    
       map1 = dict['map']
-      
 
-      macList = []
+      checkDataValid = 1
       for macAddress in map1:
-         macList.append(macAddress)
          intensityList = map1[macAddress]
-         m = statistics.mean(intensityList)
          std = statistics.stdev(intensityList)
-         conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5,Intensity6,Intensity7,Intensity8,Intensity9,Intensity10,Intensity11,Intensity12,Intensity13,Intensity14,Intensity15,Intensity16,Intensity17,Intensity18,Intensity19,Intensity20,Intensity21,Intensity22,Intensity23,Intensity24,Intensity25,Intensity26,Intensity27,Intensity28,Intensity29,Intensity30) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4], intensityList[5], intensityList[6], intensityList[7], intensityList[8], intensityList[9], intensityList[10], intensityList[11], intensityList[12], intensityList[13], intensityList[14], intensityList[15], intensityList[16], intensityList[17], intensityList[18], intensityList[19], intensityList[20], intensityList[21], intensityList[22], intensityList[23], intensityList[24], intensityList[25], intensityList[26], intensityList[27], intensityList[28], intensityList[29]));
-         conn.commit()
+         myString = myString + 'std = ' + str(std) + '\n'
+         if std > 3:
+            myString = myString + 'std is too big. Data is invalid.' + '\n'
+            checkDataValid = 0
+            break
+      
+      if checkDataValid == 0:
+         c.send(myString.encode())
+      else:
+         macList = []
+         for macAddress in map1:
+            macList.append(macAddress)
+            intensityList = map1[macAddress]
+            m = statistics.mean(intensityList)
+            std = statistics.stdev(intensityList)
+            myString = myString + 'std = ' + str(std) + '\n'
+            conn.execute("INSERT INTO FINGER (ReferencePoint,MacAddress,mean,std,Intensity1,Intensity2,Intensity3, Intensity4, Intensity5,Intensity6,Intensity7,Intensity8,Intensity9,Intensity10,Intensity11,Intensity12,Intensity13,Intensity14,Intensity15,Intensity16,Intensity17,Intensity18,Intensity19,Intensity20,Intensity21,Intensity22,Intensity23,Intensity24,Intensity25,Intensity26,Intensity27,Intensity28,Intensity29,Intensity30) \
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?)", (referencePoint, macAddress, m, std, intensityList[0], intensityList[1], intensityList[2], intensityList[3], intensityList[4], intensityList[5], intensityList[6], intensityList[7], intensityList[8], intensityList[9], intensityList[10], intensityList[11], intensityList[12], intensityList[13], intensityList[14], intensityList[15], intensityList[16], intensityList[17], intensityList[18], intensityList[19], intensityList[20], intensityList[21], intensityList[22], intensityList[23], intensityList[24], intensityList[25], intensityList[26], intensityList[27], intensityList[28], intensityList[29]));
+            conn.commit()
 
-      macList.sort()
-      print(macList)
-      cursor.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint,MacAddress1,MacAddress2,MacAddress3,MacAddress4,MacAddress5) \
-      VALUES (?,?,?,?,?,?)", (referencePoint,macList[0],macList[1],macList[2],macList[3],macList[4]));
-      conn.commit()
-   
+         macList.sort()
+         print(macList)
+         cursor.execute("INSERT INTO REFERENCEPOSITIONS (ReferencePoint,MacAddress1,MacAddress2,MacAddress3,MacAddress4,MacAddress5) \
+         VALUES (?,?,?,?,?,?)", (referencePoint,macList[0],macList[1],macList[2],macList[3],macList[4]));
+         conn.commit()
+         c.send(myString.encode())
+ 
    if goal == "TRACKING":
       map1 = dict['map']
       # When it is tracking, you only need 3 APs for the algorithm 

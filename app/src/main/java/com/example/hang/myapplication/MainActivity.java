@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     final private int REQUEST_CODE_ASK_PERMISSIONS = 1234;
@@ -74,9 +75,11 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         String referceName = referencePosition.getText().toString();
                         FingerPrint fingerPrint = scanAPForLearning(learning, referceName);
-                        //send this fingerPrint to server
-                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
-                        myClient.execute();
+                        if (fingerPrint != null) {
+                            //send this fingerPrint to server
+                            Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
+                            myClient.execute();
+                        }
                     }
                 };
                 new Thread(runnable).start();
@@ -207,6 +210,14 @@ public class MainActivity extends AppCompatActivity {
                     textView.setText(sampleValue);
                 }
             });
+        }
+
+        //check each AP has 30 sample data
+        Set<String> set = map.keySet();
+        for (String key : set) {
+            if (map.get(key).size() != 30) {
+                return null;
+            }
         }
         return new FingerPrint(goal, referceName, map);
     }
