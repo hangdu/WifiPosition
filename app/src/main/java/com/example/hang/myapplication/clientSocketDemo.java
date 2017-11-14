@@ -4,6 +4,9 @@ package com.example.hang.myapplication;
  * Created by hang on 10/16/17.
  */
 
+import android.content.Context;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
@@ -21,6 +24,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 
 public class clientSocketDemo extends Thread {
     String dstAddress;
@@ -39,6 +43,8 @@ public class clientSocketDemo extends Thread {
         public void handleMessage(Message msg) {
             if (msg.what == 0) {
                 textResponse.setText("receive data from server:" + msg.what);
+            } else if (msg.what == 5) {
+                textResponse.setText("connected with server!!!");
             }
 
 //            else if (msg.what == 1) {
@@ -53,39 +59,73 @@ public class clientSocketDemo extends Thread {
     public void run() {
         // TODO Auto-generated method stub
         super.run();
-        try {
-            client = new Socket("192.168.3.50", 12345);
-            byte[] b = new byte[1024];
-            InputStream in = client.getInputStream();
-            int count = in.read(b);
-            byte temp[] = new byte[count];
-            for (int i = 0; i < count; i++) {
-                temp[i] = b[i];
+        while (true) {
+            try {
+                client = new Socket("192.168.3.50", 12345);
+
+                myHandler.sendEmptyMessage(5);
+                byte[] b = new byte[1024];
+                InputStream in = client.getInputStream();
+                int count = in.read(b);
+                if (count < 0) {
+                    in.close();
+                    client.close();
+                    continue;
+                }
+                byte temp[] = new byte[count];
+                for (int i = 0; i < count; i++) {
+                    temp[i] = b[i];
+                }
+                String str = new String(temp);
+                Message msg = new Message();
+                msg.obj = str;
+                msg.what = 0;
+                myHandler.sendMessage(msg);
+
+                OutputStream os = client.getOutputStream();
+
+
+                //write the signal strength data
+
+                String data = String.valueOf(getSignalStrength());
+                os.write(data.getBytes());
+                os.flush();
+                myHandler.sendEmptyMessage(1);
+
+                in.close();
+                os.close();
+                client.close();
+
+            } catch (IOException e) {
+                myHandler.sendEmptyMessage(2);
             }
-            String str =  new String(temp);
-//            myHandler.sendEmptyMessage(0);
+        }
+    }
 
-            Message msg = new Message();
-            msg.obj = str;
-            msg.what = 0;
-            myHandler.sendMessage(msg);
 
-            OutputStream os = client.getOutputStream();
-
-            os.write("hello server".getBytes());
-            os.flush();
-
-            myHandler.sendEmptyMessage(1);
-
-            in.close();
-            os.close();
-            client.close();
-
-        } catch (IOException e) {
-            myHandler.sendEmptyMessage(2);
+    int getSignalStrength() {
+        WifiManager wifiManager = (WifiManager) MainApplication.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager.startScan();
+        List<ScanResult> wifiList = wifiManager.getScanResults();
+        if (wifiList.size() == 0) {
+            return 100;
         }
 
+        for (int i = 0; i < wifiList.size(); i++) {
+            ScanResult scanResult = wifiList.get(i);
+            String macAddress = scanResult.BSSID;
+            if (macAddress.equals("d0:ff:98:81:46:f8")) {
+                return scanResult.level;
+            }
+        }
+        return 101;
     }
+
+
+
+
+
+
 
 //    @Override
 //    protected String doInBackground(Void... arg0) {

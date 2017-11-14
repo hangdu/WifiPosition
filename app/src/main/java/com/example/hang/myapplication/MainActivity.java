@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         wifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
+
         referencePosition = (EditText) findViewById(R.id.referencePointName);
         editTextAddress = (EditText) findViewById(R.id.addressEditText);
         textView = (TextView) findViewById(R.id.textview_status);
