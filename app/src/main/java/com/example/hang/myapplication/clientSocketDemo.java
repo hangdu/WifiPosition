@@ -38,8 +38,14 @@ public class clientSocketDemo extends Thread {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == 0) {
-                textResponse.setText("receive data from server");
+                textResponse.setText("receive data from server:" + msg.what);
             }
+
+//            else if (msg.what == 1) {
+//                textResponse.setText("send data to server");
+//            } else {
+//                textResponse.setText("something wrong");
+//            }
         }
     };
 
@@ -50,25 +56,33 @@ public class clientSocketDemo extends Thread {
         try {
             client = new Socket("192.168.3.50", 12345);
             byte[] b = new byte[1024];
-            while (true) {
-                InputStream in = client.getInputStream();
-                int count = in.read(b);
-                byte temp[] = new byte[count];
-                for (int i = 0; i < count; i++) {
-                    temp[i] = b[i];
-                }
-                String str =  new String(temp);
-                myHandler.sendEmptyMessage(0);
-
-                OutputStream os = client.getOutputStream();
-                os.write("hello server".getBytes());
-                os.close();
-                in.close();
-
-
+            InputStream in = client.getInputStream();
+            int count = in.read(b);
+            byte temp[] = new byte[count];
+            for (int i = 0; i < count; i++) {
+                temp[i] = b[i];
             }
+            String str =  new String(temp);
+//            myHandler.sendEmptyMessage(0);
+
+            Message msg = new Message();
+            msg.obj = str;
+            msg.what = 0;
+            myHandler.sendMessage(msg);
+
+            OutputStream os = client.getOutputStream();
+
+            os.write("hello server".getBytes());
+            os.flush();
+
+            myHandler.sendEmptyMessage(1);
+
+            in.close();
+            os.close();
+            client.close();
+
         } catch (IOException e) {
-            e.printStackTrace();
+            myHandler.sendEmptyMessage(2);
         }
 
     }
