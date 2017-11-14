@@ -66,42 +66,46 @@ public class MainActivity extends AppCompatActivity {
         referencePosition = (EditText) findViewById(R.id.referencePointName);
         editTextAddress = (EditText) findViewById(R.id.addressEditText);
         textView = (TextView) findViewById(R.id.textview_status);
-        Button button1 = (Button) findViewById(R.id.button_learn1);
-        button1.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Do something in response to button click
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        String referceName = referencePosition.getText().toString();
-                        FingerPrint fingerPrint = scanAPForLearning(learning, referceName);
-                        if (fingerPrint != null) {
-                            //send this fingerPrint to server
-                            Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
-                            myClient.execute();
-                        }
-                    }
-                };
-                new Thread(runnable).start();
-            }
-        });
 
-        Button trackButton = (Button) findViewById(R.id.track);
-        trackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        FingerPrint fingerPrint = scanAPForTracking(tracking);
-                        //send this fingerPrint to server
-                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
-                        myClient.execute();
-                    }
-                };
-                new Thread(runnable).start();
-            }
-        });
+
+        clientSocketDemo demo = new clientSocketDemo(textView);
+        demo.start();
+//        Button button1 = (Button) findViewById(R.id.button_learn1);
+//        button1.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                // Do something in response to button click
+//                Runnable runnable = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        String referceName = referencePosition.getText().toString();
+//                        FingerPrint fingerPrint = scanAPForLearning(learning, referceName);
+//                        if (fingerPrint != null) {
+//                            //send this fingerPrint to server
+//                            Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
+//                            myClient.execute();
+//                        }
+//                    }
+//                };
+//                new Thread(runnable).start();
+//            }
+//        });
+//
+//        Button trackButton = (Button) findViewById(R.id.track);
+//        trackButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Runnable runnable = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        FingerPrint fingerPrint = scanAPForTracking(tracking);
+//                        //send this fingerPrint to server
+//                        Client myClient = new Client(fingerPrint, editTextAddress.getText().toString(), 12345, textView);
+//                        myClient.execute();
+//                    }
+//                };
+//                new Thread(runnable).start();
+//            }
+//        });
     }
 
     private FingerPrint scanAPForTracking(String goal) {
