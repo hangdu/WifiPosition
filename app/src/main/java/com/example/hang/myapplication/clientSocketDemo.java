@@ -11,13 +11,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.gson.Gson;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -59,46 +52,58 @@ public class clientSocketDemo extends Thread {
     public void run() {
         // TODO Auto-generated method stub
         super.run();
-        while (true) {
+        InputStream in = null;
+        try {
+            client = new Socket("192.168.3.50", 12345);
+            myHandler.sendEmptyMessage(5);
+            byte[] b = new byte[1024];
+            in = client.getInputStream();
+            int count = in.read(b);
+            byte temp[] = new byte[count];
+            for (int i = 0; i < count; i++) {
+                temp[i] = b[i];
+            }
+            String str = new String(temp);
+            Message msg = new Message();
+            msg.obj = str;
+            msg.what = 0;
+            myHandler.sendMessage(msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //send data to server
+        OutputStream os = null;
+        int times = 10;
+        for (int i = 0; i <= times; i++) {
             try {
-                client = new Socket("192.168.3.50", 12345);
-
-                myHandler.sendEmptyMessage(5);
-                byte[] b = new byte[1024];
-                InputStream in = client.getInputStream();
-                int count = in.read(b);
-                if (count < 0) {
-                    in.close();
-                    client.close();
-                    continue;
-                }
-                byte temp[] = new byte[count];
-                for (int i = 0; i < count; i++) {
-                    temp[i] = b[i];
-                }
-                String str = new String(temp);
-                Message msg = new Message();
-                msg.obj = str;
-                msg.what = 0;
-                myHandler.sendMessage(msg);
-
-                OutputStream os = client.getOutputStream();
-
-
+                //wait for 3 second
+                sleep(1000);
+                os = client.getOutputStream();
                 //write the signal strength data
-
-                String data = String.valueOf(getSignalStrength());
+                String data = null;
+                if (i == times) {
+                    data = "end";
+                } else {
+                   data = String.valueOf(getSignalStrength());
+                }
+                System.out.print(data);
                 os.write(data.getBytes());
                 os.flush();
                 myHandler.sendEmptyMessage(1);
-
-                in.close();
-                os.close();
-                client.close();
-
             } catch (IOException e) {
                 myHandler.sendEmptyMessage(2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+        }
+
+        try {
+            os.close();
+            in.close();
+            client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
