@@ -41,9 +41,13 @@ public class clientSocketDemo extends Thread {
             if (msg.what == 0) {
                 textResponse.setText("receive data from server:" + msg.what);
             } else if (msg.what == 5) {
-                textResponse.setText("connected with server!!!");
+//                textResponse.setText("connected with server!!!");
             } else if (msg.what == 6) {
                 textResponse.setText("Receive command = stop");
+            } else if (msg.what == 7) {
+                textResponse.setText("not connected with server");
+            } else if (msg.what == 8) {
+                textResponse.setText("connected with server Again!!!!!!");
             }
 
 //            else if (msg.what == 1) {
@@ -54,12 +58,28 @@ public class clientSocketDemo extends Thread {
         }
     };
 
+
+    public void tryConnect() {
+        while (true) {
+            try {
+                //if you change the phone as a server, then you need to consider to change the IP address.
+                client = new Socket("192.168.3.50", 12345);
+                if (client != null && client.isConnected()) {
+                    break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return;
+    }
+
     @Override
     public void run() {
         // TODO Auto-generated method stub
         super.run();
         try {
-            client = new Socket("192.168.3.50", 12345);
+            client = new Socket("192.168.3.55", 12345);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,6 +115,25 @@ public class clientSocketDemo extends Thread {
                                 try {
                                     //wait for 3 second
                                     sleep(1000);
+
+                                    if (!client.isConnected()) {
+                                        myHandler.sendEmptyMessage(7);
+                                        try {
+                                            os.close();
+                                            in.close();
+                                            client.close();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+
+                                        //try to connect the server until connected
+                                        myHandler.sendEmptyMessage(7);
+                                        tryConnect();
+                                        myHandler.sendEmptyMessage(8);
+                                        isReceive = false;
+                                        break;
+                                    }
+                                    myHandler.sendEmptyMessage(5);
                                     os = client.getOutputStream();
                                     //write the signal strength data
                                     String data = null;
@@ -120,7 +159,6 @@ public class clientSocketDemo extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
         try {
             os.close();
