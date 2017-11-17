@@ -42,6 +42,8 @@ public class clientSocketDemo extends Thread {
                 textResponse.setText("receive data from server:" + msg.what);
             } else if (msg.what == 5) {
                 textResponse.setText("connected with server!!!");
+            } else if (msg.what == 6) {
+                textResponse.setText("Receive command = stop");
             }
 
 //            else if (msg.what == 1) {
@@ -111,6 +113,7 @@ public class clientSocketDemo extends Thread {
                     };
                     new Thread(runnable).start();
                 } else {
+                    myHandler.sendEmptyMessage(6);
                     isReceive = false;
                 }
 
