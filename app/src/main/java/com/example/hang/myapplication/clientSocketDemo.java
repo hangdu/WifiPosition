@@ -26,6 +26,10 @@ public class clientSocketDemo extends Thread {
     TextView textResponse;
     FingerPrint fingerPrint;
     Socket client = null;
+    boolean isReceive = true;
+
+    InputStream in = null;
+    OutputStream os = null;
     public clientSocketDemo(TextView textResponse) {
         this.textResponse = textResponse;
     }
@@ -52,52 +56,69 @@ public class clientSocketDemo extends Thread {
     public void run() {
         // TODO Auto-generated method stub
         super.run();
-        InputStream in = null;
         try {
             client = new Socket("192.168.3.50", 12345);
-            myHandler.sendEmptyMessage(5);
-            byte[] b = new byte[1024];
-            in = client.getInputStream();
-            int count = in.read(b);
-            byte temp[] = new byte[count];
-            for (int i = 0; i < count; i++) {
-                temp[i] = b[i];
-            }
-            String str = new String(temp);
-            Message msg = new Message();
-            msg.obj = str;
-            msg.what = 0;
-            myHandler.sendMessage(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        //send data to server
-        OutputStream os = null;
-        int times = 10;
-        for (int i = 0; i <= times; i++) {
+        //循环接收来自服务器的消息
+        while (true) {
             try {
-                //wait for 3 second
-                sleep(1000);
-                os = client.getOutputStream();
-                //write the signal strength data
-                String data = null;
-                if (i == times) {
-                    data = "end";
-                } else {
-                   data = String.valueOf(getSignalStrength());
+                myHandler.sendEmptyMessage(5);
+                byte[] b = new byte[1024];
+                in = client.getInputStream();
+                int count = in.read(b);
+                if (count <= 0) {
+                    break;
                 }
-                System.out.print(data);
-                os.write(data.getBytes());
-                os.flush();
-                myHandler.sendEmptyMessage(1);
+                byte temp[] = new byte[count];
+                for (int i = 0; i < count; i++) {
+                    temp[i] = b[i];
+                }
+                String str = new String(temp);
+                Message msg = new Message();
+                msg.obj = str;
+                msg.what = 0;
+                myHandler.sendMessage(msg);
+
+                if (str.equals("1")) {
+                    isReceive = true;
+                    Runnable runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            //send data to server
+
+                            while (isReceive) {
+                                try {
+                                    //wait for 3 second
+                                    sleep(1000);
+                                    os = client.getOutputStream();
+                                    //write the signal strength data
+                                    String data = null;
+                                    data = String.valueOf(getSignalStrength());
+                                    System.out.print(data);
+                                    os.write(data.getBytes());
+                                    os.flush();
+                                    myHandler.sendEmptyMessage(1);
+                                } catch (IOException e) {
+                                    myHandler.sendEmptyMessage(2);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    };
+                    new Thread(runnable).start();
+                } else {
+                    isReceive = false;
+                }
+
             } catch (IOException e) {
-                myHandler.sendEmptyMessage(2);
-            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
 
+        }
         try {
             os.close();
             in.close();
@@ -125,64 +146,4 @@ public class clientSocketDemo extends Thread {
         }
         return 101;
     }
-
-
-
-
-
-
-
-//    @Override
-//    protected String doInBackground(Void... arg0) {
-//        Socket socket = null;
-//        try {
-//            socket = new Socket(dstAddress, dstPort);
-//            //send something here
-//            Gson gson = new Gson();
-//            String s = gson.toJson(fingerPrint);
-//            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-//            dataOutputStream.writeBytes(s);
-//            dataOutputStream.flush();
-//
-//            //You cannot close output stream. Because if you close here, it also means that you close socket here.
-//            //Then you will get exception when you do socket.getInputStream();
-////            dataOutputStream.close();
-//
-//            //waiting for receiving information from server
-//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024);
-//            byte[] buffer = new byte[1024];
-//            int bytesRead;
-//            InputStream inputStream = socket.getInputStream();
-//			/*
-//             * notice: inputStream.read() will block if no data return
-//			 */
-//            while ((bytesRead = inputStream.read(buffer)) != -1) {
-//                byteArrayOutputStream.write(buffer, 0, bytesRead);
-//                response += byteArrayOutputStream.toString("UTF-8");
-//            }
-//
-//            dataOutputStream.close();
-//            inputStream.close();
-//        } catch (UnknownHostException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//            response = "UnknownHostException: " + e.toString();
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//            response = "IOException: " + e.toString();
-//        } finally {
-//            if (socket != null) {
-//                try {
-//                    socket.close();
-//                } catch (IOException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//        return response;
-//    }
-
-
 }
