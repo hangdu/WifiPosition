@@ -70,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         clientSocketDemo demo = new clientSocketDemo(textView);
-        demo.start();
+        demo.connectToServer();
+
 //        Button button1 = (Button) findViewById(R.id.button_learn1);
 //        button1.setOnClickListener(new View.OnClickListener() {
 //            public void onClick(View v) {
