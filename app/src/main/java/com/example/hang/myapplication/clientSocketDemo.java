@@ -41,7 +41,7 @@ public class clientSocketDemo {
     InputStream in = null;
     OutputStream os = null;
 
-    String SOCKET_HOST = "192.168.3.50";
+    String SOCKET_HOST = "192.168.3.57";
     int SOCKET_PORT = 12345;
     DataOutputStream mDataOutputStream;
     private SocketReadThread mReadThread;
@@ -71,6 +71,8 @@ public class clientSocketDemo {
                 textResponse.setText("Read from server");
             } else if (msg.what == 10) {
                 textResponse.setText("Trying to connect to server but failed");
+            } else if (msg.what == 12) {
+                textResponse.setText("send heartBeat");
             }
         }
     };
@@ -138,9 +140,11 @@ public class clientSocketDemo {
         }
         try {
             if (!mSocket.isClosed() && !mSocket.isOutputShutdown()) {
-                String message = msg + "\r\n";
-                mDataOutputStream.write(message.getBytes());
+                String message = "heartbeat";
+//                mDataOutputStream.write(message.getBytes());
+                mDataOutputStream.writeUTF(message);
                 mDataOutputStream.flush();
+                myHandler.sendEmptyMessage(12);
                 sendTime = System.currentTimeMillis();
             } else {
                 return false;
