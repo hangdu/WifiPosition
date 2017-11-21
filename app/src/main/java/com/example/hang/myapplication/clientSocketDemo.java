@@ -72,7 +72,7 @@ public class clientSocketDemo {
             } else if (msg.what == 10) {
                 textResponse.setText("Trying to connect to server but failed");
             } else if (msg.what == 12) {
-                textResponse.setText("send heartBeat");
+                textResponse.setText(msg.obj + "");
             }
         }
     };
@@ -126,6 +126,12 @@ public class clientSocketDemo {
         connectThread.start();
     }
 
+    Message getMessage(int what, String obj) {
+        Message msg = new Message();
+        msg.what = what;
+        msg.obj = obj;
+        return msg;
+    }
 
 
     /**
@@ -140,11 +146,13 @@ public class clientSocketDemo {
         }
         try {
             if (!mSocket.isClosed() && !mSocket.isOutputShutdown()) {
-                String message = "heartbeat";
+                String message = "heartbeat && RSSI = " + getSignalStrength();
 //                mDataOutputStream.write(message.getBytes());
                 mDataOutputStream.writeUTF(message);
                 mDataOutputStream.flush();
-                myHandler.sendEmptyMessage(12);
+
+                myHandler.sendMessage(getMessage(12, message));
+//                myHandler.sendEmptyMessage(12);
                 sendTime = System.currentTimeMillis();
             } else {
                 return false;
