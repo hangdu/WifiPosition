@@ -41,7 +41,7 @@ public class clientSocketDemo {
     InputStream in = null;
     OutputStream os = null;
 
-    String SOCKET_HOST = "192.168.3.57";
+    String SOCKET_HOST = "192.168.3.50";
     int SOCKET_PORT = 12345;
     DataOutputStream mDataOutputStream;
     private SocketReadThread mReadThread;
