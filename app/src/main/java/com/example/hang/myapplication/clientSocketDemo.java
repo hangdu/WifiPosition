@@ -36,18 +36,17 @@ public class clientSocketDemo {
     TextView textResponse;
     FingerPrint fingerPrint;
     Socket mSocket = null;
-//    boolean isReceive = true;
+    boolean isSendRSSIstatus = false;
 
-    InputStream in = null;
-    OutputStream os = null;
 
     String SOCKET_HOST = "192.168.3.50";
     int SOCKET_PORT = 12345;
     DataOutputStream mDataOutputStream;
     private SocketReadThread mReadThread;
-    private static final long HEART_BEAT_RATE = 4 * 1000;
-    private long sendTime = 0L;
-//    private long signalStrengthSendTime = 0L;
+    private static final long HEART_BEAT_RATE = 3 * 1000;
+    private static final long RSSI_RATE = 1000;
+    private long heartbeatSendTime = 0L;
+    private long RSSISendTime = 0L;
 
     public clientSocketDemo(TextView textResponse) {
         this.textResponse = textResponse;
@@ -81,18 +80,25 @@ public class clientSocketDemo {
     private Runnable mHeartBeatRunnable = new Runnable() {
         @Override
         public void run() {
-            if (System.currentTimeMillis() - sendTime >= HEART_BEAT_RATE) {//每隔4秒检测一次
-                boolean isSuccess = sendHeartBeatMsg("");
+            if (System.currentTimeMillis() - heartbeatSendTime >= HEART_BEAT_RATE) {//每隔4秒检测一次
+                boolean isSuccess = sendHeartBeatMsg("heartbeat");
                 if (!isSuccess) {
                     Log.i(TAG, "连接已断开，正在重连……");
                     myHandler.sendEmptyMessage(7);
                     myHandler.removeCallbacks(mHeartBeatRunnable);// 移除线程，重连时保证该线程已停止上次调用时的工作
-                    mReadThread.release();//释放SocketReadThread线程资源
                     releaseLastSocket();
+                    mReadThread.release();//释放SocketReadThread线程资源
                     connectToServer();// 再次调用connectToServer方法，连接服务端
                 }
             }
-            myHandler.postDelayed(this, HEART_BEAT_RATE);
+            
+            if (isSendRSSIstatus) {
+                if (System.currentTimeMillis() - RSSISendTime >= RSSI_RATE) {
+                    sendHeartBeatMsg("RSSI = " + getSignalStrength());
+                    RSSISendTime = System.currentTimeMillis();
+                }
+            }
+            myHandler.postDelayed(this, RSSI_RATE);
         }
     };
 
@@ -146,14 +152,14 @@ public class clientSocketDemo {
         }
         try {
             if (!mSocket.isClosed() && !mSocket.isOutputShutdown()) {
-                String message = "heartbeat";
+//                String message = "heartbeat";
 //                mDataOutputStream.write(message.getBytes());
-                mDataOutputStream.writeUTF(message);
+                mDataOutputStream.writeUTF(msg);
                 mDataOutputStream.flush();
 
-                myHandler.sendMessage(getMessage(12, message));
+                myHandler.sendMessage(getMessage(12, msg));
 //                myHandler.sendEmptyMessage(12);
-                sendTime = System.currentTimeMillis();
+                heartbeatSendTime = System.currentTimeMillis();
             } else {
                 return false;
             }
@@ -199,16 +205,12 @@ public class clientSocketDemo {
 //
 //    }
 
-
-
-
     public class SocketReadThread extends Thread {
         private static final String TAG = "SocketReadThread";
         private volatile boolean mStopThread = false;
 
         public void release() {
             mStopThread = true;
-            releaseLastSocket();
         }
 
         @Override
@@ -219,8 +221,14 @@ public class clientSocketDemo {
                 Logger.d(TAG, "SocketThread running!");
                 while (!mStopThread) {
                     String resultStr = mInputStream.readUTF();
-//                    handleStringMsg(resultStr);
                     myHandler.sendEmptyMessage(9);
+
+                    if (resultStr.equals("1")) {
+                        isSendRSSIstatus = true;
+                        RSSISendTime = 0;
+                    } else if (resultStr.equals("0")) {
+                        isSendRSSIstatus = false;
+                    }
                 }
             } catch (UnknownHostException e) {
                 e.printStackTrace();
