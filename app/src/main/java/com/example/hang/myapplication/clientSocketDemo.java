@@ -146,7 +146,7 @@ public class clientSocketDemo {
         }
         try {
             if (!mSocket.isClosed() && !mSocket.isOutputShutdown()) {
-                String message = "heartbeat && RSSI = " + getSignalStrength();
+                String message = "heartbeat";
 //                mDataOutputStream.write(message.getBytes());
                 mDataOutputStream.writeUTF(message);
                 mDataOutputStream.flush();
