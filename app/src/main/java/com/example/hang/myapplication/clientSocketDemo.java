@@ -39,7 +39,7 @@ public class clientSocketDemo {
     boolean isSendRSSIstatus = false;
 
 
-    String SOCKET_HOST = "192.168.3.67";
+    String SOCKET_HOST = "192.168.3.50";
     int SOCKET_PORT = 12345;
     DataOutputStream mDataOutputStream;
     private SocketReadThread mReadThread;
@@ -50,7 +50,6 @@ public class clientSocketDemo {
 
     public clientSocketDemo(TextView textResponse) {
         this.textResponse = textResponse;
-//        connectToServer();
     }
 
     public Handler myHandler = new Handler() {
