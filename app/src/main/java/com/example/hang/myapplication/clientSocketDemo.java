@@ -39,7 +39,7 @@ public class clientSocketDemo {
     boolean isSendRSSIstatus = false;
 
 
-    String SOCKET_HOST = "192.168.3.50";
+    String SOCKET_HOST = "192.168.3.67";
     int SOCKET_PORT = 12345;
     DataOutputStream mDataOutputStream;
     private SocketReadThread mReadThread;
