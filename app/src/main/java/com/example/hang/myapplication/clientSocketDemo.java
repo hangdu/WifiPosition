@@ -39,7 +39,7 @@ public class clientSocketDemo {
     boolean isSendRSSIstatus = false;
 
 
-    String SOCKET_HOST = "192.168.3.67";
+    String SOCKET_HOST = "192.168.3.68";
     int SOCKET_PORT = 12345;
     DataOutputStream mDataOutputStream;
     private SocketReadThread mReadThread;
@@ -70,6 +70,7 @@ public class clientSocketDemo {
                 textResponse.setText("Read from server");
             } else if (msg.what == 10) {
                 textResponse.setText("Trying to connect to server but failed");
+                connectToServer();
             } else if (msg.what == 12) {
                 textResponse.setText(msg.obj + "");
             }
@@ -103,13 +104,18 @@ public class clientSocketDemo {
     };
 
 
+
+
     /**
      * 连接服务端
      */
     public void connectToServer() {
+
+
         Thread connectThread = new Thread(new Runnable() {
             public void run() {
                 try {
+
                     mSocket = new Socket();
                     mSocket.connect(new InetSocketAddress(SOCKET_HOST, SOCKET_PORT));
                     Log.e(TAG, "连接成功  " + SOCKET_HOST);
@@ -125,6 +131,8 @@ public class clientSocketDemo {
                 } catch (IOException e) {
                     myHandler.sendEmptyMessage(10);
                     Log.e(TAG, "连接失败  ");
+
+                    //You need to try to connect to server again
                     e.printStackTrace();
                 }
             }
